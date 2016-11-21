@@ -83,6 +83,7 @@ function synmail_theme() {
  */
 function synmail_theme_suggestions_synmail(array $variables) {
   $suggestions = [];
+  $suggestions[] = 'mail';
   $suggestions[] = 'synmail';
   // $suggestions[] = 'detirossii__' . $variables['message']['module'];
   // $suggestions[] = 'detirossii__' . $variables['message']['module'] . '__' . $variables['message']['key'];

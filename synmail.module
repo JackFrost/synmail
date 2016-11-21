@@ -1,0 +1,86 @@
+<?php
+
+/**
+ * @file
+ * Module.
+ */
+
+use Drupal\Core\Render\Markup;
+use Drupal\synmail\Controller\PhpMail;
+
+/**
+ * Implements hook_ENTITY_TYPE_presave().
+ */
+function synmail_contact_message_presave($entity) {
+  if (empty($entity->subject->getValue())) {
+    // Id формы в сущности, где отработал пресейв.
+    $formId = $entity->contact_form->getString();
+    // подгружаем сущность формы.
+    $entityForm = \Drupal::entityManager()->getStorage('contact_form')->load($formId);
+    // получаем ее заголовок.
+    $formTitle = !empty($entityForm->get('label')) ? $entityForm->get('label') : 'Контактная форма';
+    // присваиваем к сохраненному сообщению.
+    $entity->subject->setValue($formTitle);
+  }
+}
+
+/**
+ * Implements hook_mail_alter().
+ */
+function synmail_mail_alter(&$message) {
+  //dsm('synmail_mail_alter');
+  //dsm($message['id']);
+
+  $submission = $message['params']['contact_message'] -> toArray();
+  $form = $message['params']['contact_form'] -> toArray();
+  //dsm($submission);
+  //dsm($form);
+  $body = [];
+  $body['mail'] = [
+    '#theme' => 'synmail-mail',
+    '#message' => $submission,
+    '#form' => $form,
+  ];
+
+  $html = \Drupal::service('renderer')->render($body);
+  $message['body'][1] = Markup::create($html);
+
+  //_synmail_mail_dsm($message);
+
+  // If an email from the contact module, disable sending.
+  switch ($message['id']) {
+    case 'contact_page_autoreply':
+    case 'contact_page_mail':
+      $message['send'] = FALSE;
+      PhpMail::mail($message);
+      break;
+  }
+
+}
+/**
+ * MSG dsm helper.
+ */
+function _synmail_mail_dsm($message) {
+  $m = [];
+  foreach ($message as $key => $value) {
+    if (is_scalar($value)) {$m[$key] = $value;}
+    elseif ($key == 'headers') {$m[$key] = $value;}
+    else {  if ($key == 'body') {$m[$key][$k] = $v;}else{
+        foreach ($value as $k => $v) {
+          if ($k == 'convert'){$m[$key][$k] = $v;
+          }else{  $m[$key][$k] = $v->toArray();
+          }}}}
+  }
+  dsm($m);
+}
+/**
+ * Implements hook_theme().
+ */
+function synmail_theme() {
+  return [
+    'synmail-mail' => [
+      'template' => 'mail',
+      'variables' => ['message' => [], 'form' => []],
+    ],
+  ];
+}

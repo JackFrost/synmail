@@ -67,9 +67,13 @@ class PhpMail extends ControllerBase {
         unset($message['headers']['Return-Path']);
       }
     }
-    $mimeheaders = array();
+    $mimeheaders = [];
     foreach ($message['headers'] as $name => $value) {
-      $mimeheaders[] = $name . ': ' . Unicode::mimeHeaderEncode($value);
+      if ($name == "From"){
+        $mimeheaders[] = $name . ': ' . $value;
+      }else{
+        $mimeheaders[] = $name . ': ' . Unicode::mimeHeaderEncode($value);
+      }
     }
     // Prepare mail commands.
     $mail_subject = Unicode::mimeHeaderEncode($message['subject']);
@@ -91,6 +95,10 @@ class PhpMail extends ControllerBase {
       $additional_headers
     );
 
+    if(!$mail_result){
+      drupal_set_message('Не удалось отправить сообщение', 'error', FALSE);
+      dsm([$message['to'],$mail_subject,$mail_body,$mail_headers, $additional_headers]);
+    }
     return $mail_result;
   }
 

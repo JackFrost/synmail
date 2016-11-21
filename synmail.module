@@ -3,6 +3,7 @@
 /**
  * @file
  * Module.
+ * $suggestions[] = 'synmail';
  */
 
 use Drupal\Core\Render\Markup;
@@ -33,15 +34,22 @@ function synmail_mail_alter(&$message) {
 
   $submission = $message['params']['contact_message'] -> toArray();
   $form = $message['params']['contact_form'] -> toArray();
+
+  // template helper
+  foreach ($submission as $key => $value) {
+    if(strpos($key, 'field_')!== false){
+      $submission['data'][$key] = $value[0]['value'];
+    }
+  }
   //dsm($submission);
   //dsm($form);
   $body = [];
   $body['mail'] = [
-    '#theme' => 'synmail-mail',
-    '#message' => $submission,
+    '#theme' => 'synmail',
+    '#submission' => $submission,
     '#form' => $form,
   ];
-
+  dsm($body);
   $html = \Drupal::service('renderer')->render($body);
   $message['body'][1] = Markup::create($html);
 
@@ -57,6 +65,30 @@ function synmail_mail_alter(&$message) {
   }
 
 }
+
+/**
+ * Implements hook_theme().
+ */
+function synmail_theme() {
+  return [
+    'synmail' => [
+      'template' => 'mail',
+      'variables' => ['submission' => [], 'form' => []],
+    ],
+  ];
+}
+
+/**
+ * Implements hook_theme_suggestions_HOOK() for swiftmailer.
+ */
+function synmail_theme_suggestions_synmail(array $variables) {
+  $suggestions = [];
+  $suggestions[] = 'synmail';
+  // $suggestions[] = 'detirossii__' . $variables['message']['module'];
+  // $suggestions[] = 'detirossii__' . $variables['message']['module'] . '__' . $variables['message']['key'];
+  return $suggestions;
+}
+
 /**
  * MSG dsm helper.
  */
@@ -72,15 +104,4 @@ function _synmail_mail_dsm($message) {
           }}}}
   }
   dsm($m);
-}
-/**
- * Implements hook_theme().
- */
-function synmail_theme() {
-  return [
-    'synmail-mail' => [
-      'template' => 'mail',
-      'variables' => ['message' => [], 'form' => []],
-    ],
-  ];
 }

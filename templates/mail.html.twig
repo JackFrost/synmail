@@ -1,19 +1,24 @@
-<div class="report-bottom">
-  <h4>Баланс</h4>
-<div class="row">
-  <div class="col-lg-6 col-md-6 col-sm-12 col-xs-12">
-    <h4>Ваш персональный менеджер</h4>
-    {{ form.label }}<br />
+{#
+  submission
+  form
+#}
 
-    Эл. почта: context@synapse-studio.ru<br /><br />
-  </div>
-  <div class="col-lg-6 col-md-6 col-sm-12 col-xs-12">
-    <img alt="ваш менеджер" src="{{ info.manager.photo }}" />
-  </div>
-</div>
-</div>
-
-<div class="report-footer">
-    <!--2013 — 2015 © <a href="http://synapse-studio.ru/">Синапс</a>.<br /-->
-    Работает на <a href="http://synapse-studio.ru/uslugi/developing">Drupal</a>
+<div class="synmail">
+  <p>
+  Form:
+  form-id:{{ form.id }}<br />
+  form-label:{{ form.label }}<br />
+  form-to:
+  {% for recip in form.recipients %}
+      {{ recip }}<br />
+  {% endfor %}
+  </p>
+  <p>
+    Created: {{ submission.created[0][0]['value'] | date("d F Y") }}
+  </p>
+  <p>
+    {% for key, val in submission.data %}
+        {{ key }} - {{ val }}<br />
+    {% endfor %}
+  </p>
 </div>

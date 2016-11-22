@@ -9,7 +9,6 @@ use Drupal\Core\Site\Settings;
 
 /**
  * Defines the default Drupal mail backend, using PHP's native mail() function.
- *
  */
 class PhpMail extends ControllerBase {
 
@@ -24,22 +23,22 @@ class PhpMail extends ControllerBase {
    */
   public static function format($message) {
     // Join the body array into one string.
-
+    $config = \Drupal::config('node_city.settings');
     $body = $message['body'];
 
     $formater = new MailFormatHelper();
     $body = implode("\n\n", $body);
 
-    //dsm($body);
-
-    // Convert any HTML to plain-text.
-    //$body = $formater::htmlToText($body);
-    // Wrap the mail body for sending.
-    //$body = $formater::wrapMail($body);
-    // Note: email uses CRLF for line-endings. PHP's API requires LF on Unix.
+    $config = \Drupal::config('synmail.settings');
+    if (!$config->get('html')) {
+      // Convert any HTML to plain-text.
+      $body = $formater::htmlToText($body);
+      // Wrap the mail body for sending.
+      $body = $formater::wrapMail($body);
+      // Note: email uses CRLF for line-endings. PHP's API requires LF on Unix.
+    }
     $line_endings = Settings::get('mail_line_endings', PHP_EOL);
     $body = preg_replace('@\r?\n@', $line_endings, $body);
-    //dsm($body);
 
     return $body;
   }
@@ -59,7 +58,6 @@ class PhpMail extends ControllerBase {
   public static function mail(array $message) {
     // If 'Return-Path' isn't already set in php.ini, we pass it separately
     // as an additional parameter instead of in the header.
-    //dsm('$message');
     if (isset($message['headers']['Return-Path'])) {
       $return_path_set = strpos(ini_get('sendmail_path'), ' -f');
       if (!$return_path_set) {
@@ -69,9 +67,10 @@ class PhpMail extends ControllerBase {
     }
     $mimeheaders = [];
     foreach ($message['headers'] as $name => $value) {
-      if ($name == "From"){
+      if ($name == "From") {
         $mimeheaders[] = $name . ': ' . $value;
-      }else{
+      }
+      else {
         $mimeheaders[] = $name . ': ' . Unicode::mimeHeaderEncode($value);
       }
     }
@@ -81,12 +80,23 @@ class PhpMail extends ControllerBase {
 
     // For headers, PHP's API suggests that we use CRLF normally,
     // but some MTAs incorrectly replace LF with CRLF. See #234403.
-    $mail_headers = join("\n", $mimeheaders);
+    $mail_headers = implode("\n", $mimeheaders);
 
     $request = \Drupal::request();
-    //dsm('go');
 
-    $additional_headers = isset($message['Return-Path']) ? '-f' . $message['Return-Path'] : '';
+    $additional_headers = isset($message['Return-Path']) ? '-f ' . $message['Return-Path'] : '';
+
+    $config = \Drupal::config('synmail.settings');
+    if ($config->get('debug')) {
+      dsm([
+        $message['to'],
+        $mail_subject,
+        $mail_body,
+        $mail_headers,
+        $additional_headers,
+      ]
+      );
+    }
     $mail_result = @mail(
       $message['to'],
       $mail_subject,
@@ -95,9 +105,8 @@ class PhpMail extends ControllerBase {
       $additional_headers
     );
 
-    if(!$mail_result){
-      drupal_set_message('Не удалось отправить сообщение', 'error', FALSE);
-      dsm([$message['to'],$mail_subject,$mail_body,$mail_headers, $additional_headers]);
+    if (!$mail_result) {
+      drupal_set_message('Не удалось отправить сообщение', 'error');
     }
     return $mail_result;
   }

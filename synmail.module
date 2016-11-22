@@ -3,7 +3,6 @@
 /**
  * @file
  * Module.
- * $suggestions[] = 'synmail';
  */
 
 use Drupal\Core\Render\Markup;
@@ -29,39 +28,55 @@ function synmail_contact_message_presave($entity) {
  * Implements hook_mail_alter().
  */
 function synmail_mail_alter(&$message) {
-  //dsm('synmail_mail_alter');
-  //dsm($message['id']);
+  $config = \Drupal::config('synmail.settings');
+  if ($message['id'] == 'contact_page_mail') {
+    _synmail_mail_dsm($message);
 
-  $submission = $message['params']['contact_message'] -> toArray();
-  $form = $message['params']['contact_form'] -> toArray();
-
-  // template helper
-  foreach ($submission as $key => $value) {
-    if(strpos($key, 'field_')!== false){
-      $submission['data'][$key] = $value[0]['value'];
+    // If need custom template.
+    if ($config->get('tpl')) {
+      $submission = $message['params']['contact_message']->toArray();
+      $form = $message['params']['contact_form']->toArray();
+      // Template helper.
+      foreach ($submission as $key => $value) {
+        if (strpos($key, 'field_') !== FALSE) {
+          $submission['data'][$key] = $value[0]['value'];
+        }
+      }
+      $body = [];
+      $body['mail'] = [
+        '#theme' => 'synmail',
+        '#submission' => $submission,
+        '#form' => $form,
+      ];
+      $html = \Drupal::service('renderer')->render($body);
+      $message['body'][1] = Markup::create($html);
     }
-  }
-  //dsm($submission);
-  //dsm($form);
-  $body = [];
-  $body['mail'] = [
-    '#theme' => 'synmail',
-    '#submission' => $submission,
-    '#form' => $form,
-  ];
-  dsm($body);
-  $html = \Drupal::service('renderer')->render($body);
-  $message['body'][1] = Markup::create($html);
 
-  //_synmail_mail_dsm($message);
+    // Добавить в шапку признак хтмл.
+    if ($config->get('html')) {
+      $message['headers']['Content-Type'] = 'text/html';
+    }
 
-  // If an email from the contact module, disable sending.
-  switch ($message['id']) {
-    case 'contact_page_autoreply':
-    case 'contact_page_mail':
+    // Добавить поулчателей.
+    if ($config->get('emails')) {
+      $to = [];
+      $to[] = $message['to'];
+      $emails = $config->get('emails');
+      $emails = explode("\n", $emails);
+      foreach ($emails as $email) {
+        if (strpos($email, "@") && strpos($email, ".")) {
+          $to[] = trim($email);
+        }
+      }
+      $message['to'] = implode(', ', $to);
+    }
+
+    // Использовать свой пхпмейл.
+    if ($config->get('phpmail')) {
       $message['send'] = FALSE;
       PhpMail::mail($message);
-      break;
+    }
+
   }
 
 }
@@ -72,21 +87,19 @@ function synmail_mail_alter(&$message) {
 function synmail_theme() {
   return [
     'synmail' => [
-      'template' => 'mail',
+      'template' => 'synmail',
       'variables' => ['submission' => [], 'form' => []],
     ],
   ];
 }
 
 /**
- * Implements hook_theme_suggestions_HOOK() for swiftmailer.
+ * Implements hook_theme_suggestions_HOOK() for synmail.tpl.php.
  */
 function synmail_theme_suggestions_synmail(array $variables) {
   $suggestions = [];
-  $suggestions[] = 'mail';
   $suggestions[] = 'synmail';
-  // $suggestions[] = 'detirossii__' . $variables['message']['module'];
-  // $suggestions[] = 'detirossii__' . $variables['message']['module'] . '__' . $variables['message']['key'];
+  $suggestions[] = 'synmail__' . $variables['message']['key'];
   return $suggestions;
 }
 
@@ -94,15 +107,33 @@ function synmail_theme_suggestions_synmail(array $variables) {
  * MSG dsm helper.
  */
 function _synmail_mail_dsm($message) {
-  $m = [];
-  foreach ($message as $key => $value) {
-    if (is_scalar($value)) {$m[$key] = $value;}
-    elseif ($key == 'headers') {$m[$key] = $value;}
-    else {  if ($key == 'body') {$m[$key][$k] = $v;}else{
-        foreach ($value as $k => $v) {
-          if ($k == 'convert'){$m[$key][$k] = $v;
-          }else{  $m[$key][$k] = $v->toArray();
-          }}}}
+  $config = \Drupal::config('synmail.settings');
+
+  if ($config->get('debug')) {
+    $m = [];
+    foreach ($message as $key => $value) {
+      if (is_scalar($value)) {
+        $m[$key] = $value;
+      }
+      elseif ($key == 'headers') {
+        $m[$key] = $value;
+      }
+      else {
+        if ($key == 'body') {
+          $m[$key][$k] = '$v';
+        }
+        else {
+          foreach ($value as $k => $v) {
+            if ($k == 'convert') {
+              $m[$key][$k] = $v;
+            }
+            else {
+              $m[$key][$k] = $v->toArray();
+            }
+          }
+        }
+      }
+    }
+    dsm($m);
   }
-  dsm($m);
 }

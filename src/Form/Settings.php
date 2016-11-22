@@ -38,12 +38,13 @@ class Settings extends ConfigFormBase {
 
     $form["general"]['phpmail'] = array(
       '#title' => $this->t('Использовать свою функцию phpmail'),
-      '#description' => $this->t('Там правильная работа с "Frome"'),
       '#type' => 'checkbox',
       '#maxlength' => 20,
       '#required' => FALSE,
       '#size' => 15,
       '#default_value' => $config->get('phpmail'),
+      '#description' => $this->t('Там правильная работа с кирилическим
+        "Frome",<br /> <strong>лучше всегда её вклчать</strong>.'),
     );
     $form['general']['from'] = [
       '#title' => $this->t('From'),
@@ -59,11 +60,17 @@ class Settings extends ConfigFormBase {
       '#required' => FALSE,
       '#size' => 15,
       '#default_value' => $config->get('html'),
-      '#description' => $this->t('Добавляет метку в заголовок'),
+      '#description' => $this->t('Добавляет метку в заголовок,
+        использовать в сочетании с <strong>включенной</strong>
+        <a href="/admin/structure/contact/settings">html настройкой</a>
+        модуля контакт <br />
+        и галочкой <strong>Использовать свою функцию phpmail</strong>
+      '),
     );
     $form["general"]['tpl'] = array(
       '#title' => $this->t('Использовать шаблон'),
-      '#description' => $this->t('synmail.tpl.php'),
+      '#description' => $this->t('synmail.html.twig можно скопировть из
+        /modules/custom/synmail/templates'),
       '#type' => 'checkbox',
       '#maxlength' => 20,
       '#required' => FALSE,

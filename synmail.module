@@ -52,6 +52,11 @@ function synmail_mail_alter(&$message) {
       $message['body'][1] = Markup::create($html);
     }
 
+    // От кого слать письма.
+    if ($config->get('from')) {
+      $message['headers']['From'] = $config->get('from');
+    }
+
     // Добавить в шапку признак хтмл.
     if ($config->get('html')) {
       $message['headers']['Content-Type'] = 'text/html';

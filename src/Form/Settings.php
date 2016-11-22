@@ -45,15 +45,13 @@ class Settings extends ConfigFormBase {
       '#size' => 15,
       '#default_value' => $config->get('phpmail'),
     );
-    $form["general"]['tpl'] = array(
-      '#title' => $this->t('Использовать шаблон'),
-      '#description' => $this->t('synmail.tpl.php'),
-      '#type' => 'checkbox',
-      '#maxlength' => 20,
-      '#required' => FALSE,
-      '#size' => 15,
-      '#default_value' => $config->get('tpl'),
-    );
+    $form['general']['from'] = [
+      '#title' => $this->t('From'),
+      '#default_value' => $config->get('from'),
+      '#type' => 'textfield',
+      '#description' => $this->t('От кого слать письма,
+        напр: Сайт < webmaster@insaitov.ru>'),
+    ];
     $form["general"]['html'] = array(
       '#title' => $this->t('Послыть html, а не txt'),
       '#type' => 'checkbox',
@@ -63,6 +61,21 @@ class Settings extends ConfigFormBase {
       '#default_value' => $config->get('html'),
       '#description' => $this->t('Добавляет метку в заголовок'),
     );
+    $form["general"]['tpl'] = array(
+      '#title' => $this->t('Использовать шаблон'),
+      '#description' => $this->t('synmail.tpl.php'),
+      '#type' => 'checkbox',
+      '#maxlength' => 20,
+      '#required' => FALSE,
+      '#size' => 15,
+      '#default_value' => $config->get('tpl'),
+    );
+    $form['general']['emails'] = [
+      '#title' => $this->t('Кому посылать письмо'),
+      '#default_value' => $config->get('emails'),
+      '#description' => $this->t('По 1 email на строчку'),
+      '#type' => 'textarea',
+    ];
     $form["general"]['debug'] = array(
       '#title' => $this->t('Debug'),
       '#type' => 'checkbox',
@@ -72,12 +85,6 @@ class Settings extends ConfigFormBase {
       '#default_value' => $config->get('debug'),
       '#description' => $this->t('Режим отладки'),
     );
-    $form['general']['emails'] = [
-      '#title' => $this->t('Кому посылать письмо'),
-      '#default_value' => $config->get('emails'),
-      '#description' => $this->t('По 1 email на строчку'),
-      '#type' => 'textarea',
-    ];
     return parent::buildForm($form, $form_state);
   }
 
@@ -96,6 +103,7 @@ class Settings extends ConfigFormBase {
     $config = $this->config('synmail.settings');
     $config
       ->set('tpl', $form_state->getValue('tpl'))
+      ->set('from', $form_state->getValue('from'))
       ->set('phpmail', $form_state->getValue('phpmail'))
       ->set('html', $form_state->getValue('html'))
       ->set('debug', $form_state->getValue('debug'))

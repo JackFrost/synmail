@@ -1,5 +1,5 @@
 synmail.settings:
-  path: '/admin/config/system/synmail'
+  path: '/admin/config/synapse/synmail'
   defaults:
     _form: '\Drupal\synmail\Form\Settings'
     _title: 'Synmail Settings'

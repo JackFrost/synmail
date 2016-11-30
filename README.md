@@ -17,5 +17,5 @@
 3. Ставим галочку "пропускать html"
 4. Копируем файл synmail.tpl.twig в свою тему оформления и верстаем его как надо.
 
-
+<img src="https://github.com/politsin/help/blob/master/synmail.png?raw=true">
  

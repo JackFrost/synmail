@@ -3,7 +3,7 @@
 Модуль для работы с почтовой системой контактных форм.
 
 * Страница настроек /admin/config/synapse/synmail
-* Страница настроек в меню находится в подпапке модуля synapse, поэтому модуль synapse - зависимость.
+* Страница настроек в меню находится в подпапке модуля synapse (https://github.com/politsin/synapse), поэтому модуль synapse - зависимость.
  * synmail.links.menu.yml - тут прописан parent synapse.page
  * Если данная иситуация не устраивает - в качестве парента можно использовать system.admin_config_system
 
